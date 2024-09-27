@@ -1,0 +1,1 @@
+SELECT f.title AS film_title, l.name AS language_name, f.release_year AS release_year, f.length AS length_in_minutes, f.rating AS rating FROM film f JOIN language l ON f.language_id = l.language_id WHERE LOWER(l.name) = 'english' AND f.release_year IN (2006, 2007);
