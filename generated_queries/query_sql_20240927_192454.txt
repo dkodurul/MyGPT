@@ -1,0 +1,1 @@
+SELECT f.title AS film_title, c.name AS country_name, f.release_year AS release_year, f.rating AS rating, f.length AS length FROM film f JOIN language l ON f.original_language_id = l.language_id JOIN country c ON l.country_id = c.country_id WHERE c.country = 'Germany' AND f.rating IS NOT NULL AND f.length IS NOT NULL;
