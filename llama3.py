@@ -17,7 +17,7 @@ class LLaMA3:
 
     def generate_sql_query(self, natural_language_query):
         try:
-            prompt = f"{natural_language_query}, and cloumn names for different coloumns"
+            prompt = f"{natural_language_query}"
             
             prompt_template = ChatPromptTemplate.from_template(prompt)
             output_parser = StrOutputParser()

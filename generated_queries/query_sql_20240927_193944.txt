@@ -1,0 +1,1 @@
+SELECT f.title AS film_title, f.release_year AS release_date, f.length AS duration, f.rating AS rating FROM film f JOIN language l ON f.language_id = l.language_id WHERE LOWER(l.name) = 'french' ORDER BY f.title NULLS LAST;
