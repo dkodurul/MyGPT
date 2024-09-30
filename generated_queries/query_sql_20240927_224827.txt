@@ -1,1 +1,0 @@
-SELECT f.title, f.length, f.rating, ft.description FROM film f JOIN film_text ft ON f.film_id = ft.film_id;

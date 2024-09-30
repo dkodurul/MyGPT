@@ -3,10 +3,11 @@ from langchain_core.output_parsers.string import StrOutputParser
 from langchain.prompts import ChatPromptTemplate
 import os
 from datetime import datetime
+import pandas as pd
 
 class LLaMA3:
     def __init__(self):
-        self.llm = ChatOllama(model="llama-sql")
+        self.llm = ChatOllama(model="llama-sql-1")
         self.sql_query_dir = 'C:/Users/dkodurul_stu/Projects/MyGPT/generated_queries'
         self.excel_output_dir = 'C:/Users/dkodurul_stu/Projects/MyGPT/output-xl_files'
         self._ensure_directories_exist()
@@ -17,12 +18,12 @@ class LLaMA3:
 
     def generate_sql_query(self, natural_language_query):
         try:
-            prompt = f"{natural_language_query}"
-            
+            prompt = f"""
+            {natural_language_query}
+            """
             prompt_template = ChatPromptTemplate.from_template(prompt)
             output_parser = StrOutputParser()
             chain = prompt_template | self.llm | output_parser
-            
             sql_query = chain.invoke({"input": prompt})
             return sql_query.strip()
         except Exception as e:
@@ -39,8 +40,11 @@ class LLaMA3:
     def save_excel_file(self, df):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_path = self._get_unique_file_path(self.excel_output_dir, f'query_results_{timestamp}', '.xlsx')
-        df.to_excel(file_path, index=False)
+        if df.columns.dtype == 'int64':
+            df.columns = [f'Column_{i+1}' for i in range(len(df.columns))]
+        df.to_excel(file_path, index=False, header=True)
         print(f"Data exported to {file_path}")
+        return file_path
 
     def _get_unique_file_path(self, directory, base_name, extension):
         file_path = os.path.join(directory, f"{base_name}{extension}")

@@ -1,1 +1,0 @@
-SELECT f.title AS film_title, l.name AS language, f.rating FROM film f JOIN language l ON f.language_id = l.language_id WHERE f.release_year IN (2010, 2007) ORDER BY f.title NULLS LAST;

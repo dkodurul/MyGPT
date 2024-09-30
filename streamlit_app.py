@@ -1,50 +1,75 @@
 import streamlit as st
-import pandas as pd
-from database import Database
 from llama3 import LLaMA3
+from analysis import DataAnalysis
+from database import Database
+import pandas as pd
+import matplotlib.pyplot as plt
+import io
 
-def main():
-    st.set_page_config(page_title="SQL Query Generator", page_icon="🔍", layout="wide")
-    st.title("🔍 SQL Query Generator and Results Viewer")
+class StreamlitApp:
+    def __init__(self):
+        self.database_path = 'sqlite_sample.db'
+        self.db = Database(self.database_path)
+        self.llama3 = LLaMA3()
+        self.data_analyzer = DataAnalysis()
 
-    database_path = 'sqlite_sample.db'
-    llama3 = LLaMA3()
+    def run(self):
+        st.title("Natural Language to SQL & Graph Generator")
 
-    natural_language_query = st.text_area("Enter your query in natural language:", height=100)
+        natural_language_query = st.text_input("Enter your query in natural language:")
 
-    if st.button("Generate SQL and Execute"):
-        if natural_language_query:
-            sql_query = llama3.generate_sql_query(natural_language_query)
-            
-            if sql_query:
-                st.subheader("Generated SQL Query:")
-                st.code(sql_query, language="sql")
+        if st.button("Generate SQL and Execute Query"):
+            if natural_language_query:
+                with st.spinner("Generating SQL query..."):
+                    sql_query = self.llama3.generate_sql_query(natural_language_query)
                 
-                try:
-                    llama3.save_sql_query(sql_query)
-                except Exception as e:
-                    st.error(f"Error saving SQL query: {e}")
-                
-                db = Database(database_path)
-                results = db.execute_query(sql_query)
-                db.close_connection()
-                
-                if results:
-                    st.subheader("Query Results:")
-                    df = pd.DataFrame(results)
-                    st.dataframe(df)
+                if sql_query:
+                    st.subheader("Generated SQL Query:")
+                    st.code(sql_query, language='sql')
+                    self.llama3.save_sql_query(sql_query)
+
+                    with st.spinner("Executing query..."):
+                        query_results = self.db.execute_query(sql_query)
                     
-                    try:
-                        llama3.save_excel_file(df)
-                        st.success("Results saved to Excel file.")
-                    except Exception as e:
-                        st.error(f"Error saving Excel file: {e}")
+                    if query_results:
+                        df = pd.DataFrame(query_results)
+                        excel_file_path = self.llama3.save_excel_file(df)
+
+                        st.subheader("Query Results:")
+                        st.dataframe(df)
+
+                        csv = df.to_csv(index=False).encode('utf-8')
+                        st.download_button(
+                            label="Download CSV",
+                            data=csv,
+                            file_name="query_results.csv",
+                            mime="text/csv"
+                        )
+
+                        generate_graph = st.radio("Do you want to generate a graph?", ('Yes', 'No'))
+                        if generate_graph == 'Yes':
+                            graph_prompt = st.text_input("What kind of graph would you like to generate?")
+                            if st.button("Generate Graph"):
+                                with st.spinner("Generating graph..."):
+                                    graph_code = self.data_analyzer.generate_graph_code(graph_prompt, excel_file_path, df.columns.tolist())
+                                if graph_code:
+                                    st.subheader("Generated Graph Code:")
+                                    st.code(graph_code, language='python')
+                                    self.data_analyzer.save_graph_code(graph_code)
+                                    
+                                    try:
+                                        exec(graph_code)
+                                        st.pyplot(plt)
+                                        plt.close()
+                                    except Exception as e:
+                                        st.error(f"Error generating graph: {str(e)}")
+                    else:
+                        st.error("No results returned from the query.")
                 else:
-                    st.warning("No results returned from the query.")
+                    st.error("Failed to generate SQL query.")
             else:
-                st.error("Failed to generate SQL query.")
-        else:
-            st.warning("Please enter a natural language query.")
+                st.warning("Please enter a natural language query.")
 
 if __name__ == "__main__":
-    main()
+    app = StreamlitApp()
+    app.run()

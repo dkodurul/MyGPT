@@ -1,1 +1,0 @@
-SELECT f.title AS film_title, f.length AS film_length, f.rating AS film_rating, ft.description AS film_description FROM film f JOIN film_text ft ON f.film_id = ft.film_id WHERE f.release_year IN (2006, 2007, 2008);

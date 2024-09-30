@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Natural Language to SQL & Graph Generator</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Natural Language to SQL & Graph Generator</h1>
+    
+    <form id="queryForm">
+        <input type="text" id="query" name="query" placeholder="Enter your query in natural language">
+        <button type="submit">Generate SQL</button>
+    </form>
+
+    <div id="sqlResult"></div>
+    <div id="queryResult"></div>
+
+    <div id="graphSection" style="display:none;">
+        <h2>Graph Generation</h2>
+        <form id="graphForm">
+            <input type="text" id="graphPrompt" name="graph_prompt" placeholder="What kind of graph would you like to generate?">
+            <input type="hidden" id="excelFilePath" name="excel_file_path">
+            <button type="submit">Generate Graph</button>
+        </form>
+    </div>
+
+    <div id="graphResult"></div>
+
+    <script>
+        $(document).ready(function() {
+            $('#queryForm').submit(function(e) {
+                e.preventDefault();
+                $.post('/generate_sql', $(this).serialize(), function(data) {
+                    if (data.success) {
+                        $('#sqlResult').html('<h2>Generated SQL Query:</h2><pre>' + data.sql_query + '</pre>');
+                        $.post('/execute_query', {sql_query: data.sql_query}, function(queryData) {
+                            if (queryData.success) {
+                                let resultsHtml = '<h2>Query Results:</h2><table><tr>';
+                                for (let key in queryData.results[0]) {
+                                    resultsHtml += '<th>' + key + '</th>';
+                                }
+                                resultsHtml += '</tr>';
+                                queryData.results.forEach(function(row) {
+                                    resultsHtml += '<tr>';
+                                    for (let key in row) {
+                                        resultsHtml += '<td>' + row[key] + '</td>';
+                                    }
+                                    resultsHtml += '</tr>';
+                                });
+                                resultsHtml += '</table>';
+                                resultsHtml += '<a href="/download/' + queryData.excel_file + '">Download Excel File</a>';
+                                $('#queryResult').html(resultsHtml);
+                                $('#graphSection').show();
+                                $('#excelFilePath').val(queryData.excel_file);
+                            } else {
+                                $('#queryResult').html('<p>Error: ' + queryData.error + '</p>');
+                            }
+                        });
+                    } else {
+                        $('#sqlResult').html('<p>Error: ' + data.error + '</p>');
+                    }
+                });
+            });
+
+            $('#graphForm').submit(function(e) {
+                e.preventDefault();
+                $.post('/generate_graph', $(this).serialize(), function(data) {
+                    if (data.success) {
+                        $('#graphResult').html('<h2>Generated Graph Code:</h2><pre>' + data.graph_code + '</pre>');
+                    } else {
+                        $('#graphResult').html('<p>Error: ' + data.error + '</p>');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

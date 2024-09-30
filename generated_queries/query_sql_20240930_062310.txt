@@ -1,0 +1,1 @@
+SELECT m.title, m.year, m.imdb_score FROM movies m ORDER BY m.year NULLS LAST;
