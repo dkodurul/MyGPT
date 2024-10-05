@@ -1,0 +1,1 @@
+SELECT m.title, m.genres, m.runtime FROM movies m WHERE LOWER(m.title) LIKE 'b%';
