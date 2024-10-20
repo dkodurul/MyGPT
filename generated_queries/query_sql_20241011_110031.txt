@@ -1,0 +1,1 @@
+SELECT COUNT(*) AS total_movies_with_a FROM movies m WHERE LOWER(m.title) LIKE '%a%';

@@ -1,0 +1,1 @@
+SELECT m.title, m.year, m.runtime FROM movies m WHERE LOWER(m.title) LIKE 'a%' ORDER BY m.title NULLS LAST;

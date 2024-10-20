@@ -1,0 +1,1 @@
+SELECT m.title, m.year, m.director FROM movies m WHERE LOWER(m.title) LIKE 'c%' AND LOWER(m.title) LIKE '%d%';
